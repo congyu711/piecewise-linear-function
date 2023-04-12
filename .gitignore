@@ -1,0 +1,8 @@
+*
+!*/
+!*.*
+.vscode/
+examples/
+*.log
+test/
+build/
