@@ -31,6 +31,18 @@ namespace plf // piecewise linear function
     piecewise_linear_func operator+(const piecewise_linear_func& g);
   };
   piecewise_linear_func _max(const piecewise_linear_func& f, const piecewise_linear_func& g);
+
+  template<typename T>
+  T max(const T& first)
+  {
+    return first;
+  }
+  template<typename T, typename... Args>
+  T max(const T& first, Args... args)
+  {
+    return _max(first,max(args...));
+  }
+
 }
 
 #endif

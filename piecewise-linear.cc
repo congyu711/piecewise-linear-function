@@ -1,9 +1,10 @@
 #include "piecewise-linear.hh"
 #include <algorithm>
-using namespace plf;
+
 using namespace std;
 const double eps=1e-9;
-
+using plf::piecewise_linear_func;
+using plf::line_segment;
 double plf::_intersection(const line_segment& f, const line_segment& g)
 {
   if(f.a==g.a)  return std::numeric_limits<double>::max();
@@ -111,6 +112,7 @@ piecewise_linear_func plf::_max(const piecewise_linear_func& f, const piecewise_
       res.lines.push_back(line_segment(cross,min(f_bkpts[i],g_bkpts[j]),__a,__b));
     }
 
+    left=min(f_bkpts[i],g_bkpts[j]);
     if(f_bkpts[i]<g_bkpts[j])
       i++;
     else if(f_bkpts[i]>g_bkpts[j])
@@ -118,7 +120,6 @@ piecewise_linear_func plf::_max(const piecewise_linear_func& f, const piecewise_
     else  // bkpts[i]==g_bkpts[j]
       i++,j++;
 
-    left=min(f_bkpts[i],g_bkpts[j]);
   }
   return res;
 }
