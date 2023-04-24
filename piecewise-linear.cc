@@ -1,6 +1,6 @@
 #include "piecewise-linear.hh"
 #include <algorithm>
-
+#include <iostream>
 using namespace std;
 const double eps=1e-9;
 using plf::piecewise_linear_func;
@@ -70,6 +70,49 @@ piecewise_linear_func piecewise_linear_func::operator+(const piecewise_linear_fu
     res.lines.push_back(tmp);
   }
 
+  return res;
+}
+piecewise_linear_func piecewise_linear_func::operator()(const piecewise_linear_func &g)
+{
+  piecewise_linear_func res;
+  res.l=g.l; res.r=g.r;
+  for(int i=0;i<g.lines.size();i++)
+  {
+    auto lv=g.lines[i].getval(g.lines[i].l), rv=g.lines[i].getval(g.lines[i].r);  // range
+    auto fl=lower_bound(lines.begin(),lines.end(),std::min(lv,rv),[&](line_segment interval,double x){return interval.r<=x;})-lines.begin();
+    auto fr=lower_bound(lines.begin(),lines.end(),std::max(lv,rv),[&](line_segment interval,double x){return interval.r<x;})-lines.begin();
+    fr=std::min(lines.size()-1,(size_t)fr);  // if the range is too large.
+    double _it;
+    auto &line_g=g.lines[i];
+    if(lv<rv)
+    {
+      _it=lv;
+      for(int j=fl;j<=fr;j++)
+      {
+        auto &line_f=lines[j];
+        if(line_f.r==_it)  continue;
+        line_segment tmp((_it-line_g.b)/line_g.a,(std::min(line_f.r,rv)-line_g.b)/line_g.a,line_f.a*line_g.a,line_f.a*line_g.b+line_f.b);
+        res.lines.push_back(tmp);
+        _it=line_f.r;
+      }
+    }
+    else if(lv>rv)
+    {
+      _it=lv;
+      for(int j=fr;j>=fl;j--)
+      {
+        auto &line_f=lines[j];
+        if(line_f.l==_it)  continue;
+        line_segment tmp((_it-line_g.b)/line_g.a,(std::max(line_f.l,rv)-line_g.b)/line_g.a,line_f.a*line_g.a,line_f.a*line_g.b+line_f.b);
+        res.lines.push_back(tmp);
+        _it=line_f.l;
+      }
+    }
+    else  // flat line
+    {
+      res.lines.push_back(line_segment(line_g.l,line_g.r,0,lines[fl].getval(lv)));
+    }
+  }
   return res;
 }
 

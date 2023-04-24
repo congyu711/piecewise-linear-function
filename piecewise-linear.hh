@@ -19,6 +19,10 @@ namespace plf // piecewise linear function
     {
       return a*x+b;
     }
+    double getval(double x) const
+    {
+      return a*x+b;
+    }
   };
   double _intersection(const line_segment& f, const line_segment& g);
 
@@ -29,6 +33,10 @@ namespace plf // piecewise linear function
     std::vector<line_segment> lines;   // assume line segments in this vector are always ordered and disjoint
                                   // y=0 for undefined intervals.
     piecewise_linear_func operator+(const piecewise_linear_func& g);
+
+    // composition f(g(x))
+    // worst case running time is O(nm log n) where n and m are the numbers of breakpoints of f and g.
+    piecewise_linear_func operator()(const piecewise_linear_func& g);
   };
   piecewise_linear_func _max(const piecewise_linear_func& f, const piecewise_linear_func& g);
 
