@@ -5,9 +5,10 @@ using namespace std;
 const double eps=1e-9;
 using plf::piecewise_linear_func;
 using plf::line_segment;
+double __doubleMax=std::numeric_limits<double>::max();
 double plf::_intersection(const line_segment& f, const line_segment& g)
 {
-  if(f.a==g.a)  return std::numeric_limits<double>::max();
+  if(f.a==g.a)  return __doubleMax;
   return (g.b-f.b)/(f.a-g.a);
 }
 
@@ -140,7 +141,7 @@ piecewise_linear_func plf::_max(const piecewise_linear_func& f, const piecewise_
     if(_f.getval(left)<_g.getval(left)) tmp.a=_g.a,tmp.b=_g.b;
     else tmp.a=_f.a,tmp.b=_f.b;
     // no valid intersection.
-    if(cross==numeric_limits<double>::max()||cross>min(_f.r,_g.r)||cross<left)
+    if(cross==__doubleMax||cross>min(_f.r,_g.r)||cross<left)
     {
       tmp.r=min(f_bkpts[i],g_bkpts[j]);
       res.lines.push_back(tmp);
@@ -164,5 +165,93 @@ piecewise_linear_func plf::_max(const piecewise_linear_func& f, const piecewise_
       i++,j++;
 
   }
+  return res;
+}
+
+double piecewise_linear_func::operator()(double x)
+{
+  if(x>r||x<l) return __doubleMax;
+  auto it=lower_bound(lines.begin(),lines.end(),x,[&](line_segment interval,double x){return interval.r<=x;});
+  return (*it).getval(x);
+}
+
+piecewise_linear_func plf::_infconv(const piecewise_linear_func& f, const piecewise_linear_func& g)
+{
+  piecewise_linear_func res;
+  res.l=std::min(f.l,g.l);
+  // using slope_length=pair<double,double>;
+  // vector<slope_length> slopes;
+  double b0=0;
+  // slopes vector should be sorted if f and g are convex functions.
+  int i=0,j=0;
+  bool __f=0,__g=0; // aux variable for overlapped segments
+  // use one function only when another is not defined for some x;
+  if(f.l<g.l)
+  {
+    while(f.lines[i].r<=g.l)
+    {
+      auto &c=f.lines[i];
+      // slopes.push_back(make_pair(c.a,c.r-c.l));
+      res.lines.push_back(c);
+      i++;
+    }
+    // deal with the overlapped line segments
+    if(g.l>=f.lines[i].l&& g.r<=f.lines[i].r)
+    {
+      // slopes.push_back(make_pair(f.lines[i].a, f.lines[i].r-g.l));
+      res.lines.push_back(line_segment(f.lines[i].l,g.l,f.lines[i].a,f.lines[i].b));
+      __f=1;
+    }
+  }
+  else
+  {
+    while(g.lines[j].r<=f.l)
+    {
+      auto &c=g.lines[j];
+      // slopes.push_back(make_pair(c.a,c.r-c.l));
+      res.lines.push_back(c);
+      j++;
+    }
+    // deal with the overlapped line segments
+    if(f.l>=g.lines[j].l&& f.r<=g.lines[j].r)
+    {
+      // slopes.push_back(make_pair(g.lines[j].a, g.lines[j].r-f.l));
+      res.lines.push_back(line_segment(g.lines[j].l,f.l,g.lines[j].a,g.lines[j].b));
+      __g=1;
+    }
+  }
+
+  for(;i<f.lines.size()||j<g.lines.size();)
+  {
+    // f
+    if(i!=f.lines.size()&&(j==g.lines.size()||f.lines[i].a<=g.lines[j].a))
+    {
+      auto &c=f.lines[i];
+      double len;
+      if(__f) len=c.r-g.l, __f=0;
+      else len=c.r-c.l;
+      if(c.r-c.l!=0)  // slopes.push_back(make_pair(c.a,len));
+      {
+        auto& last=res.lines.back();
+        res.lines.push_back(line_segment(last.r,last.r+len,c.a,last.getval(last.r)-c.a*last.r));
+      }
+      i++;
+    }
+    else if(j!=g.lines.size()&&(i==f.lines.size()||f.lines[i].a>=g.lines[j].a))
+    {
+      auto &c=g.lines[j];
+      double len;
+      if(__g) len=c.r-f.l, __g=0;
+      else len=c.r-c.l;
+      if(c.r-c.l!=0)  // slopes.push_back(make_pair(c.a,c.r-c.l));
+      {
+        auto& last=res.lines.back();
+        res.lines.push_back(line_segment(last.r,last.r+len,c.a,last.getval(last.r)-c.a*last.r));
+      }
+      j++;
+    }
+  }
+  res.r=res.lines.back().r;
+  
   return res;
 }

@@ -32,12 +32,18 @@ namespace plf // piecewise linear function
     double l,r;
     std::vector<line_segment> lines;   // assume line segments in this vector are always ordered and disjoint
                                   // y=0 for undefined intervals.
+    
+    // addition
     piecewise_linear_func operator+(const piecewise_linear_func& g);
 
     // composition f(g(x))
     // worst case running time is O(nm log n) where n and m are the numbers of breakpoints of f and g.
     piecewise_linear_func operator()(const piecewise_linear_func& g);
+
+    // Find f(x). Assume the function is continuous.
+    double operator()(double x);
   };
+  // max
   piecewise_linear_func _max(const piecewise_linear_func& f, const piecewise_linear_func& g);
 
   template<typename T>
@@ -51,6 +57,9 @@ namespace plf // piecewise linear function
     return _max(first,max(args...));
   }
 
+  // infimal convolution
+  // f and g should be coutinuous piecewise linear convex functions.
+  piecewise_linear_func _infconv(const piecewise_linear_func&, const piecewise_linear_func&);
 }
 
 #endif
